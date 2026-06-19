@@ -142,6 +142,24 @@ pub mod disk {
         /// `true` when the disk is ready for I/O.
         pub ready: bool,
     }
+
+    /// Desired state of a [`Disk`].
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Spec {
+        pub size: u32,
+        pub volume_handle: Option<String>, // fs: Option<Fs>, //  TODO:
+    }
+
+    /// Disk resource
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Disk {
+        /// Name and namespace of this disk.
+        pub metadata: Metadata,
+        /// Desired configuration for this disk.
+        pub spec: Spec,
+    }
 }
 
 pub mod route {
@@ -154,9 +172,36 @@ pub mod route {
         /// `true` when the route is accepting traffic.
         pub ready: bool,
     }
-}
 
-pub use app::App;
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Rule {
+        pub name: String,
+        pub path: String,
+        pub port: u16,
+        pub backend_ref: Urn,
+    }
+
+    /// Desired state of a [`Route`].
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Spec {
+        pub hostname: String,
+        pub rules: Vec<Rule>,
+        pub domains: Option<Vec<String>>,
+        pub timeout: Option<u32>,
+    }
+
+    /// Route resource
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Route {
+        /// Name and namespace of this route.
+        pub metadata: Metadata,
+        /// Desired configuration for this route.
+        pub spec: Spec,
+    }
+}
 
 /// Every type of resource the platform can manage.
 #[derive(
@@ -205,5 +250,16 @@ impl ResourceKind {
             _ => None,
         }
     }
+}
 
+pub use app::App;
+pub use disk::Disk;
+pub use route::Route;
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(tag = "kind")]
+pub enum Resource {
+    App(App),
+    Disk(Disk),
+    Route(Route),
 }
