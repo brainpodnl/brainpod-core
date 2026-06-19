@@ -192,4 +192,18 @@ impl ResourceKind {
         ]
         .into_iter()
     }
+
+    pub fn from_lowercase_str(s: &str) -> Option<Self> {
+        match s {
+            "app" => Some(Self::App),
+            "route" => Some(Self::Route),
+            "disk" => Some(Self::Disk),
+            "config" => Some(Self::Config),
+            "postgres" => Some(Self::Postgres),
+            "mariadb" => Some(Self::MariaDB),
+            "valkey" => Some(Self::Valkey),
+            _ => None,
+        }
+    }
+
 }
