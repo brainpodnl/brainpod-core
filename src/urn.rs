@@ -1,8 +1,38 @@
-use std::str::FromStr;
+use std::{
+    fmt::{Display, Write},
+    str::FromStr,
+};
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::resource::ResourceKind;
+
+fn parse_kind(s: &str) -> Result<ResourceKind, Error> {
+    ResourceKind::from_str(s).map_err(|_| Error::UnknownKind(s.to_string()))
+}
+
+#[inline]
+fn fmt_urn(
+    f: &mut std::fmt::Formatter<'_>,
+    pod: Option<&str>,
+    kind: ResourceKind,
+    namespace: &str,
+    name: &str,
+) -> std::fmt::Result {
+    f.write_str("urn:brain:")?;
+
+    if let Some(pod) = pod {
+        f.write_str("pod:")?;
+        f.write_str(pod)?;
+        f.write_char(':')?;
+    }
+
+    f.write_str(&kind.to_string().to_lowercase())?;
+    f.write_char(':')?;
+    f.write_str(namespace)?;
+    f.write_char(':')?;
+    f.write_str(name)
+}
 
 /// Errors that can occur when parsing a URN string.
 #[derive(Debug, thiserror::Error)]
@@ -21,10 +51,6 @@ pub struct UrnRef<'a> {
     pub kind: ResourceKind,
     pub namespace: &'a str,
     pub name: &'a str,
-}
-
-fn parse_kind(s: &str) -> Result<ResourceKind, Error> {
-    ResourceKind::from_str(s).map_err(|_| Error::UnknownKind(s.to_string()))
 }
 
 impl<'a> UrnRef<'a> {
@@ -59,8 +85,14 @@ impl<'a> UrnRef<'a> {
     }
 }
 
+impl Display for UrnRef<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        fmt_urn(f, self.pod, self.kind, self.namespace, self.name)
+    }
+}
+
 /// Owned URN that may or may not reference a specific pod.
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct Urn {
     pub pod: Option<String>,
     pub kind: ResourceKind,
@@ -76,6 +108,38 @@ impl From<UrnRef<'_>> for Urn {
             namespace: urn.namespace.to_string(),
             name: urn.name.to_string(),
         }
+    }
+}
+
+impl Display for Urn {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        fmt_urn(
+            f,
+            self.pod.as_deref(),
+            self.kind,
+            &self.namespace,
+            &self.name,
+        )
+    }
+}
+
+impl Serialize for Urn {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(self.to_string().as_str())
+    }
+}
+
+impl<'de> Deserialize<'de> for Urn {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let string = String::deserialize(deserializer)?;
+        let urn = UrnRef::parse(&string).map_err(serde::de::Error::custom)?;
+        Ok(Urn::from(urn))
     }
 }
 
@@ -99,6 +163,12 @@ impl<'a> PodUrnRef<'a> {
     }
 }
 
+impl Display for PodUrnRef<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        fmt_urn(f, Some(self.pod), self.kind, self.namespace, self.name)
+    }
+}
+
 /// An owned, pod-scoped URN.
 ///
 /// The owned counterpart of [`PodUrnRef`];
@@ -117,5 +187,11 @@ impl From<PodUrnRef<'_>> for PodUrn {
             namespace: urn.namespace.to_string(),
             name: urn.name.to_string(),
         }
+    }
+}
+
+impl Display for PodUrn {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        fmt_urn(f, Some(&self.pod), self.kind, &self.namespace, &self.name)
     }
 }
