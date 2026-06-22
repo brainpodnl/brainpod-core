@@ -207,6 +207,7 @@ pub mod route {
 #[derive(
     Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize, EnumString, EnumIs, Display,
 )]
+#[strum(ascii_case_insensitive)]
 pub enum ResourceKind {
     /// A long-running application workload.
     App,
@@ -236,19 +237,6 @@ impl ResourceKind {
             Self::Valkey,
         ]
         .into_iter()
-    }
-
-    pub fn from_lowercase_str(s: &str) -> Option<Self> {
-        match s {
-            "app" => Some(Self::App),
-            "route" => Some(Self::Route),
-            "disk" => Some(Self::Disk),
-            "config" => Some(Self::Config),
-            "postgres" => Some(Self::Postgres),
-            "mariadb" => Some(Self::MariaDB),
-            "valkey" => Some(Self::Valkey),
-            _ => None,
-        }
     }
 }
 
