@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
+use serde_with::DeserializeFromStr;
 use strum::{Display, EnumIs, EnumString};
 
 use crate::urn::Urn;
@@ -205,7 +206,17 @@ pub mod route {
 
 /// Every type of resource the platform can manage.
 #[derive(
-    Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize, EnumString, EnumIs, Display,
+    Debug,
+    Clone,
+    Copy,
+    Hash,
+    PartialEq,
+    Eq,
+    Serialize,
+    DeserializeFromStr,
+    EnumString,
+    EnumIs,
+    Display,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum ResourceKind {
