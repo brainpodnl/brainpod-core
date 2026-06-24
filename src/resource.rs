@@ -204,6 +204,18 @@ pub mod route {
     }
 }
 
+pub mod bucket {
+    use super::*;
+
+    /// Observed status of a Bucket resource.
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Status {
+        /// `true` when the remote S3 bucket has been created.
+        pub ready: bool,
+    }
+}
+
 /// Every type of resource the platform can manage.
 #[derive(
     Debug,
