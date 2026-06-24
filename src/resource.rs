@@ -234,6 +234,8 @@ pub enum ResourceKind {
     MariaDB,
     /// A managed Valkey (Redis-compatible) cache instance.
     Valkey,
+    /// A managed S3 (Exoscale SOS) bucket.
+    Bucket,
 }
 
 impl ResourceKind {
@@ -246,6 +248,7 @@ impl ResourceKind {
             Self::Postgres,
             Self::MariaDB,
             Self::Valkey,
+            Self::Bucket,
         ]
         .into_iter()
     }
